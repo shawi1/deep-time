@@ -54,6 +54,13 @@ window.addEventListener("pointerdown", unlock, { once: true });
 const offline = applyOffline(state, Date.now());
 if (offline) ui.showOffline(offline);
 
+// If the universe reached heat death (this run or while away) and the player
+// hasn't yet chosen what to do, present the ending.
+if (state.phase >= 5 && state.endingChoice === null) {
+  endingShown = true;
+  ui.showEnding(state, () => {});
+}
+
 // ---------------------------------------------------------------------------
 // Interaction handlers
 // ---------------------------------------------------------------------------
@@ -88,6 +95,7 @@ function confirmPrestige(): void {
 function doPrestige(): void {
   state = prestige(state);
   endingShown = false;
+  resetTrackers();
   save(state);
   setEra(state.phase);
   ui.toast("A new universe begins.", "❉", "Prestige");
@@ -116,6 +124,7 @@ function doImport(str: string): boolean {
   if (!s) return false;
   state = s;
   endingShown = false;
+  resetTrackers();
   save(state);
   setMuted(state.muted);
   ui.setMuteLabel(state.muted);
@@ -131,6 +140,7 @@ function confirmReset(): void {
       clearSave();
       state = newGame();
       endingShown = false;
+      resetTrackers();
       setMuted(state.muted);
       ui.setMuteLabel(state.muted);
       setEra(state.phase);
@@ -144,6 +154,14 @@ function confirmReset(): void {
 // ---------------------------------------------------------------------------
 
 let lastPhase = state.phase;
+let seenAch = new Set<string>(Object.keys(state.achievements));
+
+/** Re-sync transient trackers after the state object is replaced
+ * (prestige / import / reset) so we don't emit spurious toasts. */
+function resetTrackers(): void {
+  lastPhase = state.phase;
+  seenAch = new Set<string>(Object.keys(state.achievements));
+}
 
 function flushEvents(): void {
   // Catch phase changes triggered directly by a purchase (not just the tick).
@@ -164,7 +182,6 @@ function onPhaseChange(p: number): void {
   lastPhase = state.phase;
 }
 
-const seenAch = new Set<string>(Object.keys(state.achievements));
 function checkAchievements(): void {
   for (const a of ACHIEVEMENTS) {
     if (state.achievements[a.id] && !seenAch.has(a.id)) {
