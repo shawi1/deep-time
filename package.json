@@ -1,0 +1,16 @@
+{
+  "name": "deep-time",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Deep Time — an incremental game from the first replicating molecule to the heat death of the universe.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}
